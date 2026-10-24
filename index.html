@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PingMe — Напоминания</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">⏰ PingMe</div>
+      <p class="subtitle">Локальная напоминалка с таймером</p>
+    </header>
+
+    <!-- Кнопка включения системных уведомлений -->
+    <div id="notify-banner" class="banner hidden">
+      <span>Включите уведомления, чтобы не пропустить звонок:</span>
+      <button id="enable-notifications-btn">Разрешить</button>
+    </div>
+
+    <!-- Форма создания -->
+    <form id="reminder-form">
+      <input 
+        type="text" 
+        id="reminder-text" 
+        placeholder="О чём напомнить? (например: Сдать отчёт)" 
+        required 
+        autocomplete="off"
+      >
+      <div class="row">
+        <input type="datetime-local" id="reminder-time" required>
+        <button type="submit" id="add-btn">Поставить</button>
+      </div>
+    </form>
+
+    <div class="list-header">
+      <span>Активные напоминания</span>
+      <span id="active-count" class="badge">0</span>
+    </div>
+
+    <ul id="reminder-list"></ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
