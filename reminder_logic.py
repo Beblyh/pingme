@@ -1,5 +1,10 @@
+from datetime import datetime
+
+
 def create_reminder(title, time):
     clean_title = title.strip() if isinstance(title, str) else ""
-    if not clean_title or not time:
+    clean_time = time.strip() if isinstance(time, str) else ""
+    if not clean_title or not clean_time:
         raise ValueError("Некорректные данные напоминания")
-    return {"title": clean_title, "time": time, "triggered": False}
+    datetime.fromisoformat(clean_time)
+    return {"title": clean_title, "time": clean_time, "triggered": False}
