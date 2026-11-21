@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, feature/ci ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check Python and HTML syntax
+        run: |
+          python -m py_compile reminder_logic.py test_reminder_logic.py
+          python -c "from html.parser import HTMLParser; HTMLParser().feed(open('index.html', encoding='utf-8').read()); print('HTML OK')"
+
+      - name: Run unit tests
+        run: python -m unittest -v
