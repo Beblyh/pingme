@@ -5,8 +5,20 @@ const list = document.getElementById('reminder-list');
 const activeCount = document.getElementById('active-count');
 const notifyBanner = document.getElementById('notify-banner');
 const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+const formError = document.getElementById('form-error');
 
-let reminders = JSON.parse(localStorage.getItem('pingme_reminders')) || [];
+function loadReminders() {
+  try {
+    const raw = localStorage.getItem('pingme_reminders');
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn('Не удалось прочитать напоминания из localStorage:', e);
+    return [];
+  }
+}
+
+let reminders = loadReminders();
 
 // Проверка системных уведомлений
 if ('Notification' in window && Notification.permission !== 'granted') {
@@ -52,32 +64,56 @@ function saveReminders() {
 function render() {
   list.innerHTML = '';
 
+  if (reminders.length === 0) {
+    const emptyLi = document.createElement('li');
+    emptyLi.className = 'empty-state';
+    emptyLi.textContent = 'Пока нет напоминаний. Добавьте первое событие выше.';
+    list.appendChild(emptyLi);
+    activeCount.textContent = '0';
+    return;
+  }
+
   reminders.sort((a, b) => new Date(a.time) - new Date(b.time));
 
   reminders.forEach((r, idx) => {
     const li = document.createElement('li');
     if (r.triggered) li.classList.add('triggered');
 
-    const formattedTime = new Date(r.time).toLocaleString('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const dateObj = new Date(r.time);
+    const formattedTime = Number.isNaN(dateObj.getTime())
+      ? 'Некорректная дата'
+      : dateObj.toLocaleString('ru-RU', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
 
-    li.innerHTML = `
-      <div class="reminder-info">
-        <span class="reminder-title">${r.title} ${r.triggered ? '🔔 [Сработало!]' : ''}</span>
-        <span class="reminder-time">📅 ${formattedTime}</span>
-      </div>
-      <button class="delete-btn" title="Удалить">✕</button>
-    `;
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'reminder-info';
 
-    li.querySelector('.delete-btn').addEventListener('click', () => {
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'reminder-title';
+    titleSpan.textContent = `${r.title}${r.triggered ? ' 🔔 [Сработало!]' : ''}`;
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'reminder-time';
+    timeSpan.textContent = `📅 ${formattedTime}`;
+
+    infoDiv.appendChild(titleSpan);
+    infoDiv.appendChild(timeSpan);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.title = 'Удалить';
+    deleteBtn.textContent = '✕';
+    deleteBtn.addEventListener('click', () => {
       reminders.splice(idx, 1);
       saveReminders();
     });
 
+    li.appendChild(infoDiv);
+    li.appendChild(deleteBtn);
     list.appendChild(li);
   });
 
@@ -110,13 +146,37 @@ setInterval(() => {
   }
 }, 1000);
 
+function showFormError(message) {
+  if (!formError) return;
+  formError.textContent = message;
+  formError.classList.remove('hidden');
+}
+
+function clearFormError() {
+  if (!formError) return;
+  formError.textContent = '';
+  formError.classList.add('hidden');
+}
+
 // Добавление напоминания
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const title = textInput.value.trim();
-  const time = timeInput.value;
+  const time = timeInput.value.trim();
 
-  if (!title || !time) return;
+  if (!title) {
+    showFormError('Введите текст напоминания (не только пробелы).');
+    textInput.focus();
+    return;
+  }
+
+  if (!time || Number.isNaN(Date.parse(time))) {
+    showFormError('Укажите корректные дату и время.');
+    timeInput.focus();
+    return;
+  }
+
+  clearFormError();
 
   reminders.push({
     title,
@@ -128,5 +188,8 @@ form.addEventListener('submit', (e) => {
   timeInput.value = '';
   saveReminders();
 });
+
+textInput.addEventListener('input', clearFormError);
+timeInput.addEventListener('input', clearFormError);
 
 render();

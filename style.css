@@ -203,3 +203,21 @@ li.triggered {
 .delete-btn:hover {
   color: var(--danger);
 }
+
+.form-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: -12px;
+  margin-bottom: 16px;
+}
+
+.form-error.hidden {
+  display: none;
+}
+
+.empty-state {
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  border-style: dashed;
+}
